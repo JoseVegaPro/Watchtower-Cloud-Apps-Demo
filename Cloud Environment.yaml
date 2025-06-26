@@ -1,0 +1,71 @@
+version: '3.9'
+
+services:
+  traefik:
+    image: "traefik:latest"
+    container_name: "traefik"
+    ports:
+      - "80:80"
+      - "443:443"
+      - "8180:8080"
+    volumes:
+      - /etc/traefik/traefik.yml:/etc/traefik/traefik.yml:ro
+      - /etc/traefik/certs/acme.json:/etc/traefik/certs/acme.json
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    restart: always
+    networks:
+      - traefik_primary
+
+  speed:
+    image: 'openspeedtest/latest'
+    container_name: speed
+    ports:
+      - '3006:3001'
+    restart: unless-stopped
+    networks:
+      - traefik_primary
+    labels:
+      traefik.enable: true
+      traefik.http.routers.speed.entrypoints: web,websecure
+      traefik.http.routers.speed.rule: Host(`speed.USEYOUROWNDOMAIN`)
+      traefik.http.routers.speed.tls: true
+      traefik.http.routers.speed.tls.certresolver: production
+
+  owncast:
+    image: owncast/owncast:latest
+    container_name: owncast
+    restart: unless-stopped
+    volumes:
+      - ./data:/app/data
+      - ./static:/app/static
+    ports:
+      - "1935:1935"
+    networks:
+      - traefik_primary
+    labels:
+      traefik.enable: true
+      traefik.http.routers.owncast.entrypoints: web,websecure
+      traefik.http.routers.owncast.rule: Host(`stream.USEYOUROWNDOMAIN`)
+      traefik.http.routers.owncast.tls: true
+      traefik.http.routers.owncast.tls.certresolver: production
+      traefik.http.services.owncast.loadbalancer.server.port: 8080
+
+  ff:
+    image: 'jlesage/firefox:latest'
+    container_name: ff
+    ports:
+      - '3003:5800'
+    volumes:
+      - /etc/00Apps/FFO:/config
+    networks:
+      - traefik_primary
+    labels:
+      traefik.enable: true
+      traefik.http.routers.ff.entrypoints: web,websecure
+      traefik.http.routers.ff.rule: Host(`ffo.USEYOUROWNDOMAIN`)
+      traefik.http.routers.ff.tls: true
+      traefik.http.routers.ff.tls.certresolver: production
+
+networks:
+  traefik_primary:
+    external: true
