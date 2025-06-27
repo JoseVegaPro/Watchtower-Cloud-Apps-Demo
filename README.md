@@ -1,6 +1,11 @@
 # Watchtower Cloud Apps Demo
 
+
 This repository provides a Docker Compose setup to demonstrate a multi-service environment using Traefik as a reverse proxy for automatic HTTPS and routing.
+
+![Architecture Diagram](https://github.com/JoseVegaPro/Watchtower-Cloud-Apps-Demo/blob/main/Diagram.png?raw=true)
+
+
 
 ## Services Included
 
